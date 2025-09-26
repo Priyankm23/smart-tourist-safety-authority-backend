@@ -9,36 +9,34 @@ const router = express.Router();
 router.post("/signup", signUp);
 router.post("/login",signIn);
 
-
-// Verify route - protected by verifyToken middleware
-router.get('/verify', verifyToken, async (req,res,next) => {
+router.get('/me', verifyToken(), async (req, res, next) => {
   try {
-    
     const user = await Authority.findById(req.authority.id).select('-password');
-    
+
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
       });
     }
 
-    // Return success with user data
     return res.json({
       success: true,
       user: {
         id: user._id,
-        name: user.fullName,
+        username: user.username,
+        fullName: user.fullName,
         email: user.email,
         role: user.role,
-        authorityId: user.authorityId
+        authorityId: user.authorityId || null,
+        isActive: user.isActive
       }
     });
   } catch (error) {
-    console.error('Verify auth error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Server error during verification' 
+    console.error('Get /me error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
     });
   }
 });
